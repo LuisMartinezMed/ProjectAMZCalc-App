@@ -17,7 +17,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.controllers.inventory_controller import get_all_products, get_low_stock_products, receive_stock
+from src.controllers.inventory_controller import (
+    delete_product,
+    get_all_products,
+    get_low_stock_products,
+    get_product_by_sku,
+    receive_stock,
+)
 from src.controllers.profit_calculator import calculate_profit
 from src.controllers.velocity_engine import (
     calculate_daily_velocity,
@@ -78,6 +84,21 @@ class InventoryView(QWidget):
         self.btn_receive.clicked.connect(self._on_receive_stock)
         header.addWidget(self.btn_receive)
 
+        self.btn_duplicate = QPushButton("📑  Duplicate")
+        self.btn_duplicate.setObjectName("primaryBtn")
+        self.btn_duplicate.clicked.connect(self._on_duplicate)
+        header.addWidget(self.btn_duplicate)
+
+        self.btn_delete = QPushButton("🗑️  Delete")
+        self.btn_delete.setObjectName("primaryBtn")
+        self.btn_delete.setStyleSheet(
+            "QPushButton{background-color:#D32F2F;color:#fff;border:none;"
+            "border-radius:5px;padding:8px 20px;font-weight:bold;font-size:13px;}"
+            "QPushButton:hover{background-color:#B71C1C;}"
+        )
+        self.btn_delete.clicked.connect(self._on_delete)
+        header.addWidget(self.btn_delete)
+
         self.btn_add = QPushButton("＋  Add Product")
         self.btn_add.setObjectName("primaryBtn")
         self.btn_add.clicked.connect(self._on_add_product)
@@ -112,10 +133,11 @@ class InventoryView(QWidget):
             low_stock_count = 0
 
             for row, p in enumerate(products):
-                # ── Financial breakdown (from calculator, no hardcoded fees) ──
+                # ── Financial breakdown (bundle_qty-aware COGS) ──
+                effective_cogs = p.buy_price * p.bundle_qty
                 breakdown = calculate_profit(
                     sell_price=p.sell_price,
-                    cogs=p.buy_price,
+                    cogs=effective_cogs,
                     referral_fee_pct=p.category.referral_fee_pct,
                     fba_fee=p.fba_fee,
                     shipping_cost=p.shipping_cost,
@@ -227,7 +249,6 @@ class InventoryView(QWidget):
         sku = sku_item.text()
         session = get_session()
         try:
-            from src.controllers.inventory_controller import get_product_by_sku
             product = get_product_by_sku(session, sku)
             if product:
                 receive_stock(session, product.id, qty)
@@ -235,3 +256,69 @@ class InventoryView(QWidget):
             session.close()
 
         self.refresh()
+
+    # ------------------------------------------------------------ Delete
+    def _on_delete(self) -> None:
+        row = self.table.currentRow()
+        if row < 0:
+            QMessageBox.information(
+                self, "Select Product",
+                "Please select a product row to delete."
+            )
+            return
+
+        sku_item = self.table.item(row, 0)
+        name_item = self.table.item(row, 2)
+        if not sku_item or not name_item:
+            return
+
+        product_name = name_item.text()
+        answer = QMessageBox.question(
+            self,
+            "Confirm Delete",
+            f"Delete '{product_name}'?\n\n"
+            "This will also delete all sales history for this product. Are you sure?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        session = get_session()
+        try:
+            product = get_product_by_sku(session, sku_item.text())
+            if product:
+                delete_product(session, product.id)
+        finally:
+            session.close()
+
+        self.refresh()
+
+    # --------------------------------------------------------- Duplicate
+    def _on_duplicate(self) -> None:
+        row = self.table.currentRow()
+        if row < 0:
+            QMessageBox.information(
+                self, "Select Product",
+                "Please select a product row to duplicate."
+            )
+            return
+
+        sku_item = self.table.item(row, 0)
+        if not sku_item:
+            return
+
+        session = get_session()
+        try:
+            product = get_product_by_sku(session, sku_item.text())
+        finally:
+            session.close()
+
+        if not product:
+            return
+
+        from src.views.product_form_view import ProductFormDialog
+
+        dlg = ProductFormDialog(self, product_to_duplicate=product)
+        if dlg.exec():
+            self.refresh()

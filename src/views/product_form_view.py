@@ -41,12 +41,15 @@ _DEFAULT_CATEGORIES = [
 class ProductFormDialog(QDialog):
     """Modal dialog to capture a new product's information."""
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent=None, product_to_duplicate=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Add New Product")
+        self._dup = product_to_duplicate
+        self.setWindowTitle("Duplicate Product" if self._dup else "Add New Product")
         self.setMinimumWidth(460)
         self.setModal(True)
         self._build_ui()
+        if self._dup:
+            self._prefill()
 
     # ------------------------------------------------------------------ UI
     def _build_ui(self) -> None:
@@ -124,6 +127,12 @@ class ProductFormDialog(QDialog):
         self.stock_input.setPlaceholderText("0")
         form.addRow("Initial Stock:", self.stock_input)
 
+        self.bundle_input = QLineEdit()
+        self.bundle_input.setValidator(QIntValidator(1, 999))
+        self.bundle_input.setPlaceholderText("1")
+        self.bundle_input.setText("1")
+        form.addRow("Units per Pack:", self.bundle_input)
+
         layout.addLayout(form)
 
         # --- Buttons ---
@@ -154,6 +163,34 @@ class ProductFormDialog(QDialog):
         all_cats = list(dict.fromkeys(names + _DEFAULT_CATEGORIES))
         self.category_combo.addItems(all_cats)
 
+    # ------------------------------------------------------- Prefill (dup)
+    def _prefill(self) -> None:
+        """Pre-fill fields from a product being duplicated."""
+        p = self._dup
+        self.sku_input.setText(f"{p.sku}-COPY")
+        self.sku_input.selectAll()
+        self.asin_input.setText("")
+        self.name_input.setText(p.name)
+
+        # Select matching category
+        cat_name = p.category.name if p.category else ""
+        idx = self.category_combo.findText(cat_name)
+        if idx >= 0:
+            self.category_combo.setCurrentIndex(idx)
+
+        ff_idx = self.fulfillment_combo.findText(p.fulfillment_type)
+        if ff_idx >= 0:
+            self.fulfillment_combo.setCurrentIndex(ff_idx)
+
+        self.cost_input.setText(f"{p.buy_price:.2f}")
+        self.price_input.setText(f"{p.sell_price:.2f}")
+        self.weight_input.setText(f"{p.weight_oz:.2f}")
+        self.length_input.setText(f"{p.length_in:.2f}")
+        self.width_input.setText(f"{p.width_in:.2f}")
+        self.height_input.setText(f"{p.height_in:.2f}")
+        self.stock_input.setText("0")
+        self.bundle_input.setText(str(p.bundle_qty))
+
     # -------------------------------------------------------- Save handler
     def _on_save(self) -> None:
         # Gather & validate
@@ -173,8 +210,13 @@ class ProductFormDialog(QDialog):
             width = float(self.width_input.text() or 0)
             height = float(self.height_input.text() or 0)
             stock = int(self.stock_input.text() or 0)
+            bundle_qty = int(self.bundle_input.text() or 1)
         except ValueError:
             QMessageBox.warning(self, "Validation", "Numeric fields contain invalid values.")
+            return
+
+        if bundle_qty < 1:
+            QMessageBox.warning(self, "Validation", "Units per Pack must be at least 1.")
             return
 
         # Check duplicate SKU
@@ -197,6 +239,7 @@ class ProductFormDialog(QDialog):
                 "width_in": width,
                 "height_in": height,
                 "stock": stock,
+                "bundle_qty": bundle_qty,
             }
             add_product_from_dict(session, data)
         except Exception as exc:

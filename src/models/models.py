@@ -90,6 +90,7 @@ class Product(Base):
     shipping_cost: float = Column(Float, nullable=False, default=0.0)
     stock: int = Column(Integer, nullable=False, default=0)
     reorder_point: int = Column(Integer, nullable=False, default=5)
+    bundle_qty: int = Column(Integer, nullable=False, default=1)
     fulfillment_type: str = Column(String(3), nullable=False, default="FBA")
     image_url: Optional[str] = Column(String(512), nullable=True)
     created_at: datetime = Column(DateTime, default=datetime.utcnow)

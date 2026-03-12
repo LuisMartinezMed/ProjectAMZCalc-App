@@ -64,6 +64,7 @@ def add_product_from_dict(session: Session, data: dict) -> Product:
         width_in=float(data["width_in"]),
         height_in=float(data["height_in"]),
         stock=int(data["stock"]),
+        bundle_qty=int(data.get("bundle_qty", 1)),
         fulfillment_type=data["fulfillment_type"],
     )
     session.add(product)
@@ -94,6 +95,15 @@ def receive_stock(session: Session, product_id: int, quantity_added: int) -> Non
         product.stock += quantity_added
         product.updated_at = datetime.utcnow()
         session.commit()
+
+
+def delete_product(session: Session, product_id: int) -> None:
+    """Delete a product and all its associated sales records."""
+    session.query(Sale).filter_by(product_id=product_id).delete()
+    product = session.query(Product).get(product_id)
+    if product:
+        session.delete(product)
+    session.commit()
 
 
 def get_low_stock_products(session: Session) -> List[Product]:
