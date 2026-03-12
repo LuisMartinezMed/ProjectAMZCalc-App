@@ -41,15 +41,15 @@ _DEFAULT_CATEGORIES = [
 class ProductFormDialog(QDialog):
     """Modal dialog to capture a new product's information."""
 
-    def __init__(self, parent=None, product_to_duplicate=None) -> None:
+    def __init__(self, parent=None, product_to_edit=None) -> None:
         super().__init__(parent)
-        self._dup = product_to_duplicate
+        self._dup = product_to_edit
         self.setWindowTitle("Duplicate Product" if self._dup else "Add New Product")
         self.setMinimumWidth(460)
         self.setModal(True)
         self._build_ui()
         if self._dup:
-            self._prefill()
+            self._load_data()
 
     # ------------------------------------------------------------------ UI
     def _build_ui(self) -> None:
@@ -122,6 +122,11 @@ class ProductFormDialog(QDialog):
         self.height_input.setPlaceholderText("in")
         form.addRow("Height (in):", self.height_input)
 
+        self.shipping_input = QLineEdit()
+        self.shipping_input.setValidator(dbl)
+        self.shipping_input.setPlaceholderText("0.00")
+        form.addRow("Inbound Shipping ($):", self.shipping_input)
+
         self.stock_input = QLineEdit()
         self.stock_input.setValidator(int_val)
         self.stock_input.setPlaceholderText("0")
@@ -163,17 +168,17 @@ class ProductFormDialog(QDialog):
         all_cats = list(dict.fromkeys(names + _DEFAULT_CATEGORIES))
         self.category_combo.addItems(all_cats)
 
-    # ------------------------------------------------------- Prefill (dup)
-    def _prefill(self) -> None:
+    # ------------------------------------------------------- Load data (dup)
+    def _load_data(self) -> None:
         """Pre-fill fields from a product being duplicated."""
         p = self._dup
-        self.sku_input.setText(f"{p.sku}-COPY")
-        self.sku_input.selectAll()
-        self.asin_input.setText("")
-        self.name_input.setText(p.name)
+        self.sku_input.setText("")
+        self.sku_input.setPlaceholderText("Enter a new SKU")
+        self.asin_input.setText(p.asin if p.asin else "")
+        self.name_input.setText(f"{p.name} (COPY)")
 
         # Select matching category
-        cat_name = p.category.name if p.category else ""
+        cat_name = getattr(p, "_dup_category_name", "") or ""
         idx = self.category_combo.findText(cat_name)
         if idx >= 0:
             self.category_combo.setCurrentIndex(idx)
@@ -188,6 +193,7 @@ class ProductFormDialog(QDialog):
         self.length_input.setText(f"{p.length_in:.2f}")
         self.width_input.setText(f"{p.width_in:.2f}")
         self.height_input.setText(f"{p.height_in:.2f}")
+        self.shipping_input.setText(f"{p.shipping_cost:.2f}")
         self.stock_input.setText("0")
         self.bundle_input.setText(str(p.bundle_qty))
 
@@ -209,6 +215,7 @@ class ProductFormDialog(QDialog):
             length = float(self.length_input.text() or 0)
             width = float(self.width_input.text() or 0)
             height = float(self.height_input.text() or 0)
+            shipping = float(self.shipping_input.text() or 0)
             stock = int(self.stock_input.text() or 0)
             bundle_qty = int(self.bundle_input.text() or 1)
         except ValueError:
@@ -238,6 +245,7 @@ class ProductFormDialog(QDialog):
                 "length_in": length,
                 "width_in": width,
                 "height_in": height,
+                "shipping_cost": shipping,
                 "stock": stock,
                 "bundle_qty": bundle_qty,
             }

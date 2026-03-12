@@ -311,14 +311,15 @@ class InventoryView(QWidget):
         session = get_session()
         try:
             product = get_product_by_sku(session, sku_item.text())
+            if not product:
+                return
+            # Eagerly read category name before closing the session
+            product._dup_category_name = product.category.name if product.category else ""
         finally:
             session.close()
 
-        if not product:
-            return
-
         from src.views.product_form_view import ProductFormDialog
 
-        dlg = ProductFormDialog(self, product_to_duplicate=product)
+        dlg = ProductFormDialog(self, product_to_edit=product)
         if dlg.exec():
             self.refresh()

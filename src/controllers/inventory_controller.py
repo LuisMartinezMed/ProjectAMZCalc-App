@@ -8,6 +8,7 @@ from typing import List, Optional, Tuple
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from src.controllers.fba_calculator import _FeeEngine
 from src.controllers.profit_calculator import ProfitBreakdown, calculate_profit
 from src.models.models import Category, Product, Sale
 
@@ -52,6 +53,15 @@ def add_product(session: Session, product: Product) -> Product:
 def add_product_from_dict(session: Session, data: dict) -> Product:
     """Create a Product from form data dict and persist it."""
     cat = get_or_create_category(session, data["category"])
+
+    # Calculate real FBA fee from dimensions/weight
+    fba_fee = float(_FeeEngine.fba_fee(
+        weight_oz=data["weight_oz"],
+        length_in=data["length_in"],
+        width_in=data["width_in"],
+        height_in=data["height_in"],
+    ))
+
     product = Product(
         sku=data["sku"],
         asin=data["asin"],
@@ -63,6 +73,8 @@ def add_product_from_dict(session: Session, data: dict) -> Product:
         length_in=float(data["length_in"]),
         width_in=float(data["width_in"]),
         height_in=float(data["height_in"]),
+        fba_fee=fba_fee,
+        shipping_cost=float(data.get("shipping_cost", 0)),
         stock=int(data["stock"]),
         bundle_qty=int(data.get("bundle_qty", 1)),
         fulfillment_type=data["fulfillment_type"],
