@@ -1,0 +1,179 @@
+/* Amazon Inventory & Profit Master – Global QSS Stylesheet */
+
+/* ── Base ──────────────────────────────────────────────── */
+QMainWindow, QWidget {
+    background-color: #F7F8FA;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 13px;
+    color: #232F3E;
+}
+
+/* ── Sidebar ──────────────────────────────────────────── */
+#sidebar {
+    background-color: #232F3E;
+    min-width: 220px;
+    max-width: 220px;
+}
+
+#sidebar QPushButton {
+    background-color: transparent;
+    color: #D5D9DD;
+    border: none;
+    text-align: left;
+    padding: 14px 20px;
+    font-size: 14px;
+    border-left: 3px solid transparent;
+}
+
+#sidebar QPushButton:hover {
+    background-color: #37475A;
+    color: #FFFFFF;
+}
+
+#sidebar QPushButton:checked,
+#sidebar QPushButton[active="true"] {
+    background-color: #37475A;
+    color: #FF9900;
+    border-left: 3px solid #FF9900;
+    font-weight: bold;
+}
+
+#appTitle {
+    color: #FF9900;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 18px 20px 8px 20px;
+}
+
+#appSubtitle {
+    color: #8D9EAF;
+    font-size: 11px;
+    padding: 0 20px 14px 20px;
+}
+
+/* ── KPI Cards ────────────────────────────────────────── */
+.kpi-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E3E6E8;
+    border-radius: 8px;
+    padding: 18px;
+}
+
+.kpi-value {
+    font-size: 26px;
+    font-weight: bold;
+    color: #232F3E;
+}
+
+.kpi-label {
+    font-size: 12px;
+    color: #6B7785;
+    margin-top: 4px;
+}
+
+/* ── Table ────────────────────────────────────────────── */
+QTableWidget {
+    background-color: #FFFFFF;
+    border: 1px solid #E3E6E8;
+    border-radius: 6px;
+    gridline-color: #EEF0F2;
+    selection-background-color: #FFF4E0;
+    selection-color: #232F3E;
+}
+
+QTableWidget::item {
+    padding: 6px 10px;
+}
+
+QHeaderView::section {
+    background-color: #232F3E;
+    color: #FFFFFF;
+    padding: 8px 10px;
+    border: none;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+/* ── Buttons ──────────────────────────────────────────── */
+QPushButton#primaryBtn {
+    background-color: #FF9900;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 20px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+QPushButton#primaryBtn:hover {
+    background-color: #E68A00;
+}
+
+QPushButton#primaryBtn:pressed {
+    background-color: #CC7A00;
+}
+
+/* ── Status badges ────────────────────────────────────── */
+.badge-ok {
+    color: #067D62;
+    background-color: #D4EDDA;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+.badge-warn {
+    color: #856404;
+    background-color: #FFF3CD;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+.badge-danger {
+    color: #721C24;
+    background-color: #F8D7DA;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+/* ── Section headers ──────────────────────────────────── */
+.section-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #232F3E;
+    padding-bottom: 4px;
+}
+
+/* ── Product Form Dialog ──────────────────────────────── */
+QDialog {
+    background-color: #F7F8FA;
+}
+
+QDialog QLineEdit, QDialog QComboBox {
+    padding: 6px 10px;
+    border: 1px solid #CED4DA;
+    border-radius: 4px;
+    font-size: 13px;
+    background-color: #FFFFFF;
+}
+
+QDialog QLineEdit:focus, QDialog QComboBox:focus {
+    border-color: #FF9900;
+}
+
+QDialog QPushButton {
+    padding: 7px 18px;
+    border-radius: 4px;
+    font-size: 13px;
+    border: 1px solid #CED4DA;
+    background-color: #FFFFFF;
+}
+
+QDialog QPushButton:hover {
+    background-color: #E3E6E8;
+}
